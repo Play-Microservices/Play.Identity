@@ -8,7 +8,6 @@ using Microsoft.OpenApi.Models;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Serializers;
-using MongoDB.Driver;
 using Play.Common.Settings;
 using Play.Identity.API.Entities;
 using Play.Identity.API.Settings;
@@ -24,7 +23,7 @@ public class Startup(IConfiguration configuration)
         BsonSerializer.RegisterSerializer(new GuidSerializer(BsonType.String));
         var serviceSettings = Configuration.GetSection(nameof(ServiceSettings)).Get<ServiceSettings>();
         var mongoDbSettings = Configuration.GetSection(nameof(MongoDbSettings)).Get<MongoDbSettings>();
-        var identityServerSettings = new IdentityServerSettings();
+        var identityServerSettings = Configuration.GetSection(nameof(IdentityServerSettings)).Get<IdentityServerSettings>();
 
         services.AddDefaultIdentity<ApplicationUser>()
             .AddRoles<ApplicationRole>()
@@ -32,9 +31,15 @@ public class Startup(IConfiguration configuration)
                 mongoDbSettings.ConnectionString,
                 serviceSettings.ServiceName);
 
-        services.AddIdentityServer()
+        services.AddIdentityServer(options =>
+            {
+                options.Events.RaiseSuccessEvents = true;
+                options.Events.RaiseFailureEvents = true;
+                options.Events.RaiseErrorEvents = true;
+            })
             .AddAspNetIdentity<ApplicationUser>()
             .AddInMemoryApiScopes(identityServerSettings.ApiScopes)
+            .AddInMemoryApiResources(identityServerSettings.ApiResources)
             .AddInMemoryClients(identityServerSettings.Clients)
             .AddInMemoryIdentityResources(identityServerSettings.IdentityResources);
 
