@@ -12,7 +12,7 @@ using static Duende.IdentityServer.IdentityServerConstants;
 namespace Play.Identity.API.Controllers;
 
 [ApiController]
-[Authorize(Policy = LocalApi.PolicyName)]
+[Authorize(Policy = LocalApi.PolicyName, Roles = Roles.Admin)]
 [Route("users")]
 public class UsersController(
     UserManager<ApplicationUser> userManager
