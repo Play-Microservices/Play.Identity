@@ -11,7 +11,8 @@ public class IdentityServerSettings
     public IReadOnlyCollection<IdentityResource> IdentityResources =>
         [
             new IdentityResources.OpenId(),
-            new IdentityResources.Profile()
+            new IdentityResources.Profile(),
+            new IdentityResource("roles", new[] { "role" })
         ];
     public string ClientId { get; init; } = string.Empty;
     public IReadOnlyCollection<string> AllowedGrantTypes { get; init; } = [];
