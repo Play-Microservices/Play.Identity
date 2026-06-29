@@ -1,4 +1,5 @@
 using System;
+using MassTransit;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -8,8 +9,10 @@ using Microsoft.OpenApi.Models;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Serializers;
+using Play.Common.MassTransit;
 using Play.Common.Settings;
 using Play.Identity.API.Entities;
+using Play.Identity.API.Exceptions;
 using Play.Identity.API.HostedServices;
 using Play.Identity.API.Settings;
 
@@ -34,6 +37,13 @@ public class Startup(IConfiguration configuration)
             .AddMongoDbStores<ApplicationUser, ApplicationRole, Guid>(
                 mongoDbSettings.ConnectionString,
                 serviceSettings.ServiceName);
+
+        services.AddMassTransitWithRabbitMQ(configurator =>
+        {
+            configurator.Interval(3, TimeSpan.FromSeconds(5));
+            configurator.Ignore<InsufficientFundsException>();
+            configurator.Ignore<UnknownUserException>();
+        });
 
         services.AddIdentityServer(options =>
             {
