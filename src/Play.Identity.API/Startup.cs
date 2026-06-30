@@ -63,7 +63,7 @@ public class Startup(IConfiguration configuration)
         services.AddHostedService<IdentitySeedHostedService>();
         services.AddSwaggerGen(c =>
         {
-            c.SwaggerDoc("v1", new OpenApiInfo { Title = "Play.Identity.Service", Version = "v1" });
+            c.SwaggerDoc("v1", new OpenApiInfo { Title = "Play.Identity.API", Version = "v1" });
         });
     }
 
@@ -73,7 +73,7 @@ public class Startup(IConfiguration configuration)
         {
             app.UseDeveloperExceptionPage();
             app.UseSwagger();
-            app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Play.Identity.Service v1"));
+            app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Play.Identity.API v1"));
 
             app.UseCors(builder =>
             {
