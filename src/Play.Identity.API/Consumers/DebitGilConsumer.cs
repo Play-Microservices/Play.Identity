@@ -20,17 +20,25 @@ public class DebitGilConsumer(UserManager<ApplicationUser> userManager) : IConsu
             throw new UnknownUserException(message.UserId);
         }
 
-        user.Gil -= message.Gil;
-        if (user.Gil < 0)
+        if (!user.MessageIds.Contains(context.MessageId!.Value))
         {
-            throw new InsufficientFundsException(message.UserId, message.Gil);
+            user.Gil -= message.Gil;
+            if (user.Gil < 0)
+            {
+                throw new InsufficientFundsException(message.UserId, message.Gil);
+            }
+            
+            user.MessageIds.Add(context.MessageId!.Value);
+        
+            var result = await _userManager.UpdateAsync(user);
+
+            if (!result.Succeeded)
+            {
+                // TODO Handle this use case
+                return;
+            }
         }
         
-        var result = await _userManager.UpdateAsync(user);
-
-        if (result.Succeeded)
-        {
-            await context.Publish(new GilDebited(message.CorrelationId));
-        }
+        await context.Publish(new GilDebited(message.CorrelationId));
     }
 }
