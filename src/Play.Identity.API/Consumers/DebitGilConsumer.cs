@@ -30,7 +30,7 @@ public class DebitGilConsumer(UserManager<ApplicationUser> userManager) : IConsu
 
         if (result.Succeeded)
         {
-            await context.Publish<GilDebited>(message.CorrelationId);
+            await context.Publish(new GilDebited(message.CorrelationId));
         }
     }
 }
