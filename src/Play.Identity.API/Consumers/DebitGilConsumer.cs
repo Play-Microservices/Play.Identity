@@ -1,3 +1,5 @@
+using System;
+using System.Linq;
 using System.Threading.Tasks;
 using MassTransit;
 using Microsoft.AspNetCore.Identity;
@@ -34,11 +36,16 @@ public class DebitGilConsumer(UserManager<ApplicationUser> userManager) : IConsu
 
             if (!result.Succeeded)
             {
-                // TODO Handle this use case
-                return;
+                throw new Exception(string.Join(";", result.Errors
+                    .Select(e => $"{e.Code}:{e.Description}")));
             }
         }
         
-        await context.Publish(new GilDebited(message.CorrelationId));
+        var gilDebitedTask = context.Publish(new GilDebited(message.CorrelationId));
+        var userUpdatedTask = context.Publish(new UserUpdated(
+            message.UserId,
+            user.Email!,
+            user.Gil));
+        await Task.WhenAll(gilDebitedTask, userUpdatedTask);
     }
 }

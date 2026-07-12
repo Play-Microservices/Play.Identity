@@ -1,12 +1,14 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using MassTransit;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Play.Identity.API.Dtos;
 using Play.Identity.API.Entities;
+using Play.Identity.Contracts;
 using static Duende.IdentityServer.IdentityServerConstants;
 
 namespace Play.Identity.API.Controllers;
@@ -15,10 +17,11 @@ namespace Play.Identity.API.Controllers;
 [Authorize(Policy = LocalApi.PolicyName, Roles = Roles.Admin)]
 [Route("users")]
 public class UsersController(
-    UserManager<ApplicationUser> userManager
-    ) : ControllerBase
+    UserManager<ApplicationUser> userManager,
+    IPublishEndpoint publishEndpoint) : ControllerBase
 {
     private readonly UserManager<ApplicationUser> _userManager = userManager;
+    private readonly IPublishEndpoint _publishEndpoint = publishEndpoint;
 
     [HttpGet]
     [ProducesResponseType(typeof(UserDto), StatusCodes.Status200OK)]
@@ -29,7 +32,7 @@ public class UsersController(
         return Ok(users.Select(user => user.AsDto()));
     }
 
-    [HttpGet("{id}")]
+    [HttpGet("{id:guid}")]
     [ProducesResponseType(typeof(UserDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<UserDto>> GetByIdAsync(Guid id)
@@ -44,7 +47,7 @@ public class UsersController(
         return Ok(user.AsDto());
     }
 
-    [HttpPut("{id}")]
+    [HttpPut("{id:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -67,11 +70,13 @@ public class UsersController(
         {
             return NoContent();
         }
+        
+        await _publishEndpoint.Publish(new UserUpdated(user.Id, user.Email!, user.Gil));
 
         return BadRequest(result.Errors);
     }
 
-    [HttpDelete("{id}")]
+    [HttpDelete("{id:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -79,18 +84,14 @@ public class UsersController(
     {
         var user = await _userManager.FindByIdAsync(id.ToString());
 
-        if (user is null)
-        {
-            return NotFound();
-        }
+        if (user is null) return NotFound();
 
         var result = await _userManager.DeleteAsync(user);
 
-        if (result.Succeeded)
-        {
-            return NoContent();
-        }
-
-        return BadRequest(result.Errors);
+        if (!result.Succeeded) return BadRequest(result.Errors);
+        
+        await _publishEndpoint.Publish(new UserUpdated(user.Id, user.Email!, 0));
+            
+        return NoContent();
     }
 }
