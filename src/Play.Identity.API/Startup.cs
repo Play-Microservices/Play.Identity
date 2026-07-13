@@ -1,5 +1,5 @@
 using System;
-using MassTransit;
+using GreenPipes;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -77,7 +77,7 @@ public class Startup(IConfiguration configuration)
 
             app.UseCors(builder =>
             {
-                builder.WithOrigins(Configuration[AllowedOriginSettings])
+                builder.WithOrigins(Configuration[AllowedOriginSettings]!)
                     .AllowAnyHeader()
                     .AllowAnyMethod();
             });

@@ -10,3 +10,14 @@ dotnet nuget add source "<Absolute_path_to_package_folder>" -n PlayEconomy
 ## Pack library and export to output folder
 dotnet pack -o ../../../packages/
 dotnet pack -o ../../../packages/ -p PackageVersion=1.0.2
+
+## Publish package to Github
+```powershell
+$version="1.0.2"
+$owner="Play-Microservices"
+$gh_pat="[PAT HERE]"
+
+dotnet pack src/Play.Identity.Contracts/ --configuration Release -p:PackageVersion=$version -p:RepositoryUrl=http://github.com/$owner/play.identity -o ../packages
+
+dotnet nuget push ../packages/Play.Identity.Contracts.$version.nupkg --api-key $gh_pat --source "github"
+```
