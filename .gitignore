@@ -401,3 +401,9 @@ FodyWeavers.xsd
 
 # Private Keys
 src/Play.Identity.API/keys/**
+
+# Ignore Rider files
+.idea/
+
+# DS_USER files
+**/.DS_STORE
