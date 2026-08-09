@@ -61,7 +61,7 @@ dotnet user-secrets list
 $env:GH_OWNER="Play-Microservices"
 $env:GH_USERNAME="[USERNAME HERE]"
 $env:GH_PAT="[PAT HERE]"
-$version="1.0.2"
+$version="1.0.3"
 docker build --secret id=GH_USERNAME --secret id=GH_OWNER --secret id=GH_PAT -t play.identity:$version .
 ```
 
@@ -69,7 +69,7 @@ docker build --secret id=GH_USERNAME --secret id=GH_OWNER --secret id=GH_PAT -t 
 export GH_OWNER="Play-Microservices"
 export GH_USERNAME="[USERNAME HERE]"
 export GH_PAT="[PAT HERE]"
-version="1.0.2"
+version="1.0.3"
 
 docker build \
   --secret id=GH_OWNER \
@@ -83,17 +83,19 @@ docker build \
 
 ```powershell
 $adminPass="[PASSWORD HERE]"
-version="1.0.2"
-docker run -it -=rm -p 5002:8080 --name identity -e MongoDbSettings__Host=mongo -e RabbitMQSettings__Host=rabbitmq -e IdentitySettings__AdminUserPassword=$adminPass --network playinfrastructure_default play.identity:$version
+$cosmosDbConnString="[CONN STRING HERE]"
+version="1.0.3"
+docker run -it -=rm -p 5002:8080 --name identity -e MongoDbSettings__Host=$$cosmosDbConnString -e RabbitMQSettings__Host=rabbitmq -e IdentitySettings__AdminUserPassword=$adminPass --network playinfrastructure_default play.identity:$version
 ```
 
 ```bash
 adminPass="[PASSWORD HERE]"
-version="1.0.2"
+cosmosDbConnString="[CONN STRING HERE]"
+version="1.0.3"
 docker run -it --rm \
   -p 5002:8080 \
   --name identity \
-  -e MongoDbSettings__Host=mongo \
+  -e MongoDbSettings__ConnectionString=$cosmosDbConnString \
   -e RabbitMQSettings__Host=rabbitmq \
   -e IdentitySettings__AdminUserPassword="$adminPass" \
   --network playinfrastructure_default \
