@@ -41,7 +41,7 @@ public class Startup(IConfiguration configuration)
                 mongoDbSettings.ConnectionString,
                 serviceSettings.ServiceName);
 
-        services.AddMassTransitWithRabbitMQ(configurator =>
+        services.AddMassTransitWithMessageBroker(Configuration, configurator =>
         {
             configurator.Interval(3, TimeSpan.FromSeconds(5));
             configurator.Ignore<InsufficientFundsException>();

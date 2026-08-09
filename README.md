@@ -61,45 +61,62 @@ dotnet user-secrets list
 $env:GH_OWNER="Play-Microservices"
 $env:GH_USERNAME="[USERNAME HERE]"
 $env:GH_PAT="[PAT HERE]"
-$version="1.0.3"
-docker build --secret id=GH_USERNAME --secret id=GH_OWNER --secret id=GH_PAT -t play.identity:$version .
+$appname="playeconomy"
+$version="1.0.4"
+docker build --secret id=GH_USERNAME --secret id=GH_OWNER --secret id=GH_PAT -t "$appname.azurecr.io/play.identity:$version" .
 ```
 
 ```bash
 export GH_OWNER="Play-Microservices"
 export GH_USERNAME="[USERNAME HERE]"
 export GH_PAT="[PAT HERE]"
-version="1.0.3"
+appname="playeconomy"
+version="1.0.4"
 
 docker build \
   --secret id=GH_OWNER \
   --secret id=GH_USERNAME \
   --secret id=GH_PAT \
-  -t play.identity:$version .
+  -t "$appname.azurecr.io/play.identity:$version" .
 ```
-
 
 ### Run the docker image
 
 ```powershell
 $adminPass="[PASSWORD HERE]"
 $cosmosDbConnString="[CONN STRING HERE]"
-version="1.0.3"
-docker run -it -=rm -p 5002:8080 --name identity -e MongoDbSettings__Host=$$cosmosDbConnString -e RabbitMQSettings__Host=rabbitmq -e IdentitySettings__AdminUserPassword=$adminPass --network playinfrastructure_default play.identity:$version
+$serviceBusConnString="[CONN STRING HERE]"
+version="1.0.4"
+docker run -it --rm -p 5002:8080 --name identity \
+  -e MongoDbSettings__Host=$cosmosDbConnString \
+  -e ServiceBusSettings__ConnectionString=$serviceBusConnString \
+  -e ServiceSettings__MessageBroker="SERVICEBUS" \
+  -e IdentitySettings__AdminUserPassword=$adminPass \
+  play.identity:$version
 ```
 
 ```bash
 adminPass="[PASSWORD HERE]"
 cosmosDbConnString="[CONN STRING HERE]"
-version="1.0.3"
+serviceBusConnString="[CONN STRING HERE]"
+version="1.0.4"
 docker run -it --rm \
   -p 5002:8080 \
   --name identity \
   -e MongoDbSettings__ConnectionString=$cosmosDbConnString \
-  -e RabbitMQSettings__Host=rabbitmq \
+  -e ServiceBusSettings__ConnectionString=$serviceBusConnString \
+  -e ServiceSettings__MessageBroker="SERVICEBUS" \
   -e IdentitySettings__AdminUserPassword="$adminPass" \
-  --network playinfrastructure_default \
   "play.identity:$version"
+```
+
+### Publishing the Docker image
+
+```bash
+appname="playeconomy"
+version="1.0.4"
+az acr login --name $appname
+docker push "$appname.azurecr.io/play.identity:$version"
 ```
 
 ---
