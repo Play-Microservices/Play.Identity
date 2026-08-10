@@ -92,7 +92,7 @@ docker run -it --rm -p 5002:8080 --name identity \
   -e ServiceBusSettings__ConnectionString=$serviceBusConnString \
   -e ServiceSettings__MessageBroker="SERVICEBUS" \
   -e IdentitySettings__AdminUserPassword=$adminPass \
-  play.identity:$version
+  "$appname.azurecr.io/play.identity:$version"
 ```
 
 ```bash
@@ -107,7 +107,7 @@ docker run -it --rm \
   -e ServiceBusSettings__ConnectionString=$serviceBusConnString \
   -e ServiceSettings__MessageBroker="SERVICEBUS" \
   -e IdentitySettings__AdminUserPassword="$adminPass" \
-  "play.identity:$version"
+  "$appname.azurecr.io/play.identity:$version"
 ```
 
 ### Publishing the Docker image
@@ -117,6 +117,18 @@ appname="playeconomy"
 version="1.0.4"
 az acr login --name $appname
 docker push "$appname.azurecr.io/play.identity:$version"
+```
+
+### Create Kubernetes namespace with secrets
+```bash
+namespace="identity"
+kubectl create namespace $namespace
+kubectl create secret generic identity-secret \
+  --from-literal=cosmosdb-connectionstring=$cosmosDbConnString \
+  --from-literal=servicebus-connectionstring=$serviceBusConnString \
+  --from-literal=admin-password=$adminPass \
+  -n $namespace 
+kubectl get secrets -n $namespace
 ```
 
 ---
