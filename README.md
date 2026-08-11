@@ -123,12 +123,22 @@ docker push "$appname.azurecr.io/play.identity:$version"
 ```bash
 namespace="identity"
 kubectl create namespace $namespace
-kubectl create secret generic identity-secret \
+kubectl create secret generic identity-secrets \
   --from-literal=cosmosdb-connectionstring=$cosmosDbConnString \
   --from-literal=servicebus-connectionstring=$serviceBusConnString \
   --from-literal=admin-password=$adminPass \
   -n $namespace 
 kubectl get secrets -n $namespace
+```
+
+### Create Kubernetes pod
+```bash
+kubectl apply -f ./kubernetes/identity.yaml -n $namespace
+kubectl get pods -n $namespace
+identityPod="identity-deployment-67d7898699-d5zjb"
+kubectl logs $identityPod -n $namespace
+kubectl describe pod $identityPod -n $namespace
+kubectl get services -n $namespace
 ```
 
 ---

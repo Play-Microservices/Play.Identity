@@ -19,9 +19,6 @@ spec:
         - name: identity
           image: playeconomy.azurecr.io/play.identity:1.0.4
           imagePullPolicy: IfNotPresent
-          resources:
-            memory: "128Mi"
-            cpu: "150m"
           env:
             - name: ServiceSettings__MessageBroker
               value: SERVICEBUS
@@ -44,4 +41,16 @@ spec:
             - containerPort: 8080
               protocol: TCP
       restartPolicy: Always
-      
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: identity-service
+spec:
+  type: LoadBalancer
+  selector:
+    app: identity
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080
