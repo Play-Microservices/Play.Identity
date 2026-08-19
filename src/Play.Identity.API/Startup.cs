@@ -15,6 +15,7 @@ using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Serializers;
 using MongoDB.Driver;
+using Play.Common.HealthChecks;
 using Play.Common.MassTransit;
 using Play.Common.Settings;
 using Play.Identity.API.Entities;
@@ -75,17 +76,7 @@ public class Startup(IConfiguration configuration)
         });
         
         services.AddHealthChecks()
-            .Add(new HealthCheckRegistration(
-                    "mongodb",
-                    _ =>
-                    {
-                        var mongoClient = new MongoClient(mongoDbSettings.ConnectionString);
-                        return new MongoDbHealthCheck(mongoClient);
-                    },
-                    HealthStatus.Unhealthy,
-                    ["ready"],
-                    TimeSpan.FromSeconds(3)
-            ));
+            .AddMongoDb();
     }
 
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
@@ -123,14 +114,7 @@ public class Startup(IConfiguration configuration)
         {
             endpoints.MapControllers();
             endpoints.MapRazorPages();
-            endpoints.MapHealthChecks("/health/ready", new HealthCheckOptions
-            {
-                Predicate = check => check.Tags.Contains("ready")
-            });
-            endpoints.MapHealthChecks("/health/live", new HealthCheckOptions
-            {
-                Predicate = _ => false
-            });
+            endpoints.MapPlayEconomyHealthChecks();
         });
     }
 }
