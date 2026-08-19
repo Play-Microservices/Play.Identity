@@ -62,7 +62,7 @@ $env:GH_OWNER="Play-Microservices"
 $env:GH_USERNAME="[USERNAME HERE]"
 $env:GH_PAT="[PAT HERE]"
 $appname="playeconomy"
-$version="1.0.4"
+$version="1.0.5"
 docker build --secret id=GH_USERNAME --secret id=GH_OWNER --secret id=GH_PAT -t "$appname.azurecr.io/play.identity:$version" .
 ```
 
@@ -71,7 +71,7 @@ export GH_OWNER="Play-Microservices"
 export GH_USERNAME="[USERNAME HERE]"
 export GH_PAT="[PAT HERE]"
 appname="playeconomy"
-version="1.0.4"
+version="1.0.5"
 
 docker build \
   --secret id=GH_OWNER \
@@ -86,7 +86,7 @@ docker build \
 $adminPass="[PASSWORD HERE]"
 $cosmosDbConnString="[CONN STRING HERE]"
 $serviceBusConnString="[CONN STRING HERE]"
-version="1.0.4"
+version="1.0.5"
 docker run -it --rm -p 5002:8080 --name identity \
   -e MongoDbSettings__Host=$cosmosDbConnString \
   -e ServiceBusSettings__ConnectionString=$serviceBusConnString \
@@ -99,7 +99,7 @@ docker run -it --rm -p 5002:8080 --name identity \
 adminPass="[PASSWORD HERE]"
 cosmosDbConnString="[CONN STRING HERE]"
 serviceBusConnString="[CONN STRING HERE]"
-version="1.0.4"
+version="1.0.5"
 docker run -it --rm \
   -p 5002:8080 \
   --name identity \
@@ -114,7 +114,7 @@ docker run -it --rm \
 
 ```bash
 appname="playeconomy"
-version="1.0.4"
+version="1.0.5"
 az acr login --name $appname
 docker push "$appname.azurecr.io/play.identity:$version"
 ```
@@ -172,7 +172,7 @@ dotnet pack -o ../../../packages/
 To specify a package version:
 
 ```bash
-dotnet pack -o ../../../packages/ -p:PackageVersion=1.0.2
+dotnet pack -o ../../../packages/ -p:PackageVersion=1.0.5
 ```
 
 ### Publish the package to GitHub Packages
@@ -180,7 +180,7 @@ dotnet pack -o ../../../packages/ -p:PackageVersion=1.0.2
 Set the package version, GitHub owner, and GitHub Personal Access Token:
 
 ```powershell
-$version="1.0.2"
+$version="1.0.5"
 $owner="Play-Microservices"
 $gh_pat="[PAT HERE]"
 ```

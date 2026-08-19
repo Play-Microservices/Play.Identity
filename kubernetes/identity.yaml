@@ -40,6 +40,16 @@ spec:
           ports:
             - containerPort: 8080
               protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: 8080
+            initialDelaySeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health/live
+              port: 8080
+            initialDelaySeconds: 10
       restartPolicy: Always
 ---
 apiVersion: v1
