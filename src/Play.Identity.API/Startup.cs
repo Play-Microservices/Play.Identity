@@ -69,6 +69,8 @@ public class Startup(IConfiguration configuration)
         {
             c.SwaggerDoc("v1", new OpenApiInfo { Title = "Play.Identity.API", Version = "v1" });
         });
+        
+        services.AddHealthChecks();
     }
 
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
@@ -106,6 +108,7 @@ public class Startup(IConfiguration configuration)
         {
             endpoints.MapControllers();
             endpoints.MapRazorPages();
+            endpoints.MapHealthChecks("/health");
         });
     }
 }
