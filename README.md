@@ -55,24 +55,32 @@ dotnet user-secrets list
 * Email: `admin@play.com`
 * Password: `Pass@word1`
 
-### Build the docker image
+---
 
-```powershell
-$env:GH_OWNER="Play-Microservices"
-$env:GH_USERNAME="[USERNAME HERE]"
-$env:GH_PAT="[PAT HERE]"
-$appname="playeconomy"
-$version="1.0.5"
-docker build --secret id=GH_USERNAME --secret id=GH_OWNER --secret id=GH_PAT -t "$appname.azurecr.io/play.identity:$version" .
-```
+## Azure
+
+### Set environment variables
+
+Set the variables used by all Azure, Docker, and Kubernetes commands below:
 
 ```bash
 export GH_OWNER="Play-Microservices"
 export GH_USERNAME="[USERNAME HERE]"
 export GH_PAT="[PAT HERE]"
-appname="playeconomy"
-version="1.0.5"
 
+appname="playmicroservices"
+version="1.0.6"
+
+adminPass="[PASSWORD HERE]"
+cosmosDbConnString="[COSMOS DB CONNECTION STRING HERE]"
+serviceBusConnString="[SERVICE BUS CONNECTION STRING HERE]"
+
+namespace="identity"
+```
+
+### Build the Docker image
+
+```bash
 docker build \
   --secret id=GH_OWNER \
   --secret id=GH_USERNAME \
@@ -80,65 +88,93 @@ docker build \
   -t "$appname.azurecr.io/play.identity:$version" .
 ```
 
-### Run the docker image
-
-```powershell
-$adminPass="[PASSWORD HERE]"
-$cosmosDbConnString="[CONN STRING HERE]"
-$serviceBusConnString="[CONN STRING HERE]"
-version="1.0.5"
-docker run -it --rm -p 5002:8080 --name identity \
-  -e MongoDbSettings__Host=$cosmosDbConnString \
-  -e ServiceBusSettings__ConnectionString=$serviceBusConnString \
-  -e ServiceSettings__MessageBroker="SERVICEBUS" \
-  -e IdentitySettings__AdminUserPassword=$adminPass \
-  "$appname.azurecr.io/play.identity:$version"
-```
+### Run the Docker image
 
 ```bash
-adminPass="[PASSWORD HERE]"
-cosmosDbConnString="[CONN STRING HERE]"
-serviceBusConnString="[CONN STRING HERE]"
-version="1.0.5"
 docker run -it --rm \
   -p 5002:8080 \
   --name identity \
-  -e MongoDbSettings__ConnectionString=$cosmosDbConnString \
-  -e ServiceBusSettings__ConnectionString=$serviceBusConnString \
+  -e MongoDbSettings__ConnectionString="$cosmosDbConnString" \
+  -e ServiceBusSettings__ConnectionString="$serviceBusConnString" \
   -e ServiceSettings__MessageBroker="SERVICEBUS" \
   -e IdentitySettings__AdminUserPassword="$adminPass" \
   "$appname.azurecr.io/play.identity:$version"
 ```
 
-### Publishing the Docker image
+### Publish the Docker image
+
+Login to Azure Container Registry:
 
 ```bash
-appname="playeconomy"
-version="1.0.5"
-az acr login --name $appname
+az acr login --name "$appname"
+```
+
+Push the Docker image:
+
+```bash
 docker push "$appname.azurecr.io/play.identity:$version"
 ```
 
 ### Create Kubernetes namespace with secrets
+
+Create the namespace:
+
 ```bash
-namespace="identity"
-kubectl create namespace $namespace
+kubectl create namespace "$namespace"
+```
+
+Create the secrets:
+
+```bash
 kubectl create secret generic identity-secrets \
-  --from-literal=cosmosdb-connectionstring=$cosmosDbConnString \
-  --from-literal=servicebus-connectionstring=$serviceBusConnString \
-  --from-literal=admin-password=$adminPass \
-  -n $namespace 
-kubectl get secrets -n $namespace
+  --from-literal=cosmosdb-connectionstring="$cosmosDbConnString" \
+  --from-literal=servicebus-connectionstring="$serviceBusConnString" \
+  --from-literal=admin-password="$adminPass" \
+  -n "$namespace"
+```
+
+Check the secrets:
+
+```bash
+kubectl get secrets -n "$namespace"
 ```
 
 ### Create Kubernetes pod
+
+Deploy the Identity service:
+
 ```bash
-kubectl apply -f ./kubernetes/identity.yaml -n $namespace
-kubectl get pods -n $namespace
-identityPod="identity-deployment-67d7898699-d5zjb"
-kubectl logs $identityPod -n $namespace
-kubectl describe pod $identityPod -n $namespace
-kubectl get services -n $namespace
+kubectl apply -f ./kubernetes/identity.yaml -n "$namespace"
+```
+
+Check the pods:
+
+```bash
+kubectl get pods -n "$namespace"
+```
+
+Set the pod name:
+
+```bash
+identityPod="[IDENTITY POD NAME]"
+```
+
+Check the pod logs:
+
+```bash
+kubectl logs "$identityPod" -n "$namespace"
+```
+
+Describe the pod:
+
+```bash
+kubectl describe pod "$identityPod" -n "$namespace"
+```
+
+Check the services:
+
+```bash
+kubectl get services -n "$namespace"
 ```
 
 ---
@@ -158,7 +194,7 @@ dotnet build
 This only needs to be done once. Replace `<Absolute_path_to_package_folder>` with the absolute path to the local package folder:
 
 ```bash
-dotnet nuget add source "<Absolute_path_to_package_folder>" -n PlayEconomy
+dotnet nuget add source "<Absolute_path_to_package_folder>" -n playmicroservices
 ```
 
 ### Pack the library
@@ -169,30 +205,41 @@ To create the NuGet package and export it to the `packages` folder:
 dotnet pack -o ../../../packages/
 ```
 
+Set the package version, GitHub owner, and GitHub Personal Access Token:
+
+```bash
+version="1.0.6"
+```
+
 To specify a package version:
 
 ```bash
-dotnet pack -o ../../../packages/ -p:PackageVersion=1.0.5
+dotnet pack -o ../../../packages/ -p:PackageVersion=$version
 ```
 
 ### Publish the package to GitHub Packages
 
-Set the package version, GitHub owner, and GitHub Personal Access Token:
+Set the GitHub owner, and GitHub Personal Access Token:
 
-```powershell
-$version="1.0.5"
-$owner="Play-Microservices"
-$gh_pat="[PAT HERE]"
+```bash
+owner="Play-Microservices"
+gh_pat="[PAT HERE]"
 ```
 
 Pack the library:
 
-```powershell
-dotnet pack src/Play.Identity.Contracts/ --configuration Release -p:PackageVersion=$version -p:RepositoryUrl=http://github.com/$owner/play.identity -o ../packages
+```bash
+dotnet pack src/Play.Identity.Contracts/ \
+  --configuration Release \
+  -p:PackageVersion="$version" \
+  -p:RepositoryUrl="http://github.com/$owner/play.identity" \
+  -o ../packages
 ```
 
 Push the package to GitHub Packages:
 
-```powershell
-dotnet nuget push ../packages/Play.Identity.Contracts.$version.nupkg --api-key $gh_pat --source "github"
+```bash
+dotnet nuget push "../packages/Play.Identity.Contracts.$version.nupkg" \
+  --api-key "$gh_pat" \
+  --source "github"
 ```

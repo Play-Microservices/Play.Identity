@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: identity
-          image: playeconomy.azurecr.io/play.identity:1.0.4
+          image: playmicroservices.azurecr.io/play.identity:1.0.4
           imagePullPolicy: IfNotPresent
           env:
             - name: ServiceSettings__MessageBroker
