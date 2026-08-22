@@ -123,22 +123,6 @@ Create the namespace:
 kubectl create namespace "$namespace"
 ```
 
-Create the secrets:
-
-```bash
-kubectl create secret generic identity-secrets \
-  --from-literal=cosmosdb-connectionstring="$cosmosDbConnString" \
-  --from-literal=servicebus-connectionstring="$serviceBusConnString" \
-  --from-literal=admin-password="$adminPass" \
-  -n "$namespace"
-```
-
-Check the secrets:
-
-```bash
-kubectl get secrets -n "$namespace"
-```
-
 ### Create Kubernetes pod
 
 Deploy the Identity service:
@@ -175,6 +159,68 @@ Check the services:
 
 ```bash
 kubectl get services -n "$namespace"
+```
+
+### Creating the Azure Managed Identity and granting it access to Key Vault secrets
+
+Create identity:
+
+```bash
+az identity create \
+  --resource-group $appname \
+  --name $namespace
+```
+
+Get identity client ID:
+
+```bash
+IDENTITY_CLIENT_ID=$(az identity show \
+  -g "$appname" \
+  -n "$namespace" \
+  --query clientId \
+  -o tsv)
+```
+
+Set GET/LIST policy for new identity to Key Vault:
+
+```bash
+az keyvault set-policy \
+  -n $appname \
+  --secret-permissions get list \
+  --spn $IDENTITY_CLIENT_ID
+```
+
+For RBAC Key Vault use this instead:
+
+```bash
+KEYVAULT_ID=$(az keyvault show \
+  -n "$appname" \
+  -g "$appname" \
+  --query id \
+  -o tsv)
+
+az role assignment create \
+  --assignee "$IDENTITY_CLIENT_ID" \
+  --role "Key Vault Secrets User" \
+  --scope "$KEYVAULT_ID"
+```
+
+### Establish the federated identity credential
+
+```bash
+AKS_OIDC_ISSUER="$(az aks show \
+  --name "$appname" \
+  --resource-group "$appname" \
+  --query "oidcIssuerProfile.issuerUrl" \
+  --output tsv)"
+  
+az identity federated-credential create \
+    --name $namespace \
+    --identity-name "$namespace" \
+    --resource-group "$appname" \
+    --issuer "$AKS_OIDC_ISSUER" \
+    --subject system:serviceaccount:"$namespace":"$namespace-serviceaccount" \
+    --audience api://AzureADTokenExchange
 ```
 
 ---
